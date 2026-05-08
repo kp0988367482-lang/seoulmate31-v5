@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SEOULMATE 31 — 你在首爾最信任的那個人</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  :root{
+    --black:#0d0d0d;
+    --cream:#f5f0e8;
+    --red:#c0392b;
+    --gray:#6b6b6b;
+    --border:#e0dbd0;
+  }
+  body{font-family:'Helvetica Neue',Arial,'PingFang TC','Microsoft JhengHei',sans-serif;background:var(--cream);color:var(--black);line-height:1.6}
+  a{color:inherit;text-decoration:none}
+
+  /* NAV */
+  nav{background:var(--black);padding:16px 24px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
+  .logo{color:#fff;font-size:18px;font-weight:700;letter-spacing:2px}
+  .logo span{color:var(--red)}
+  nav a.cta-nav{background:var(--red);color:#fff;padding:8px 20px;border-radius:4px;font-size:14px;font-weight:600}
+
+  /* HERO */
+  .hero{background:var(--black);color:#fff;padding:80px 24px 60px;text-align:center}
+  .hero .tag{font-size:13px;letter-spacing:3px;color:var(--red);text-transform:uppercase;margin-bottom:20px}
+  .hero h1{font-size:clamp(36px,6vw,72px);font-weight:900;line-height:1.1;margin-bottom:24px}
+  .hero h1 em{color:var(--red);font-style:normal}
+  .hero p{font-size:18px;color:#ccc;max-width:520px;margin:0 auto 40px}
+  .hero .btn-main{display:inline-block;background:var(--red);color:#fff;padding:16px 40px;border-radius:6px;font-size:18px;font-weight:700;cursor:pointer}
+  .hero .btn-main:hover{background:#a93226}
+
+  /* SECTION */
+  section{padding:60px 24px;max-width:760px;margin:0 auto}
+  h2{font-size:28px;font-weight:800;margin-bottom:32px;border-left:4px solid var(--red);padding-left:16px}
+
+  /* WHY */
+  .why-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:20px}
+  .why-card{background:#fff;border:1px solid var(--border);border-radius:8px;padding:24px}
+  .why-card .num{font-size:32px;font-weight:900;color:var(--red);margin-bottom:8px}
+  .why-card h3{font-size:16px;font-weight:700;margin-bottom:8px}
+  .why-card p{font-size:14px;color:var(--gray)}
+
+  /* SERVICE */
+  .service-card{background:#fff;border:1px solid var(--border);border-radius:8px;padding:32px;margin-bottom:20px;display:flex;justify-content:space-between;align-items:center;gap:24px;flex-wrap:wrap}
+  .service-info h3{font-size:20px;font-weight:800;margin-bottom:8px}
+  .service-info p{font-size:14px;color:var(--gray);max-width:400px}
+  .service-price{text-align:right;flex-shrink:0}
+  .service-price .price{font-size:32px;font-weight:900;color:var(--red)}
+  .service-price .sub{font-size:12px;color:var(--gray);margin-bottom:12px}
+  .btn-buy{display:inline-block;background:var(--black);color:#fff;padding:12px 28px;border-radius:6px;font-size:15px;font-weight:700;cursor:pointer;border:none;white-space:nowrap}
+  .btn-buy:hover{background:#333}
+
+  /* FLOW */
+  .flow{display:flex;flex-direction:column;gap:0}
+  .flow-step{display:flex;gap:20px;align-items:flex-start;padding:20px 0;border-bottom:1px solid var(--border)}
+  .flow-step:last-child{border-bottom:none}
+  .step-num{background:var(--red);color:#fff;width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:16px;flex-shrink:0;margin-top:2px}
+  .step-body h4{font-size:16px;font-weight:700;margin-bottom:4px}
+  .step-body p{font-size:14px;color:var(--gray)}
+
+  /* FOOTER */
+  footer{background:var(--black);color:#888;text-align:center;padding:32px 24px;font-size:13px}
+  footer strong{color:#fff}
+
+  /* MODAL */
+  .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:999;align-items:center;justify-content:center;padding:20px}
+  .modal-overlay.open{display:flex}
+  .modal{background:#fff;border-radius:12px;padding:36px;max-width:480px;width:100%;position:relative}
+  .modal h3{font-size:22px;font-weight:800;margin-bottom:8px}
+  .modal .subtitle{font-size:14px;color:var(--gray);margin-bottom:24px}
+  .bank-card{border:1px solid var(--border);border-radius:8px;padding:20px;margin-bottom:16px}
+  .bank-card .bank-name{font-size:13px;font-weight:700;color:var(--gray);margin-bottom:12px}
+  .bank-row{display:flex;justify-content:space-between;font-size:15px;padding:4px 0}
+  .bank-row span:last-child{font-weight:700}
+  .modal-note{background:#f9f6f0;border-radius:8px;padding:16px;font-size:13px;color:var(--gray);margin-bottom:20px;line-height:1.7}
+  .modal-amount{font-size:13px;color:var(--gray);margin-bottom:16px}
+  .modal-amount strong{color:var(--red);font-size:20px}
+  .btn-line{display:block;background:#06c755;color:#fff;text-align:center;padding:14px;border-radius:8px;font-size:16px;font-weight:700;margin-bottom:10px}
+  .btn-close{display:block;background:#eee;color:#333;text-align:center;padding:12px;border-radius:8px;font-size:15px;font-weight:600;cursor:pointer;border:none;width:100%}
+  .modal-x{position:absolute;top:16px;right:20px;font-size:24px;cursor:pointer;color:#999;background:none;border:none}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="logo">SEOULMATE <span>31</span></div>
+  <a class="cta-nav" href="#service" onclick="openModal('諮詢',2499)">立即預約</a>
+</nav>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="tag">🇹🇼 × 🇰🇷 &nbsp; 居韓第10年</div>
+  <h1>你有 30 個朋友，<br>但沒有一個<em>在首爾</em>。</h1>
+  <p>韓國落地生活 · 留學就業 · 電商代購<br>你在韓國需要知道的，全在這裡。</p>
+  <div class="btn-main" onclick="openModal('諮詢',2499)">先聊一次，免費評估 →</div>
+</div>
+
+<!-- WHY -->
+<section>
+  <h2>為什麼選 SEOULMATE31</h2>
+  <div class="why-grid">
+    <div class="why-card">
+      <div class="num">10</div>
+      <h3>年在地經驗</h3>
+      <p>住過才知道，踩過才懂得。不是攻略，是真實發生的事。</p>
+    </div>
+    <div class="why-card">
+      <div class="num">100%</div>
+      <h3>親身驗證</h3>
+      <p>每一條資訊都是自己跑過的。網路免費資訊，通常最貴。</p>
+    </div>
+    <div class="why-card">
+      <div class="num">1:1</div>
+      <h3>真人諮詢</h3>
+      <p>不是機器人，不是模板回覆。你說你的情況，我給你答案。</p>
+    </div>
+  </div>
+</section>
+
+<!-- SERVICE -->
+<section id="service">
+  <h2>服務與定價</h2>
+
+  <div class="service-card">
+    <div class="service-info">
+      <h3>🏠 落地全包 · Arrival Pack</h3>
+      <p>租房、銀行開戶、外登證、手機門號——來韓國第一個月所有手續，一次搞定。</p>
+    </div>
+    <div class="service-price">
+      <div class="price">$2,499</div>
+      <div class="sub">USD · 一次性</div>
+      <button class="btn-buy" onclick="openModal('落地全包',2499)">立即購買</button>
+    </div>
+  </div>
+
+  <div class="service-card">
+    <div class="service-info">
+      <h3>📚 留學全包 · Study Pack</h3>
+      <p>語學堂選校、入學申請、簽證辦理、打工度假規劃——從台灣到首爾，全程陪跑。</p>
+    </div>
+    <div class="service-price">
+      <div class="price">$2,499</div>
+      <div class="sub">USD · 一次性</div>
+      <button class="btn-buy" onclick="openModal('留學全包',2499)">立即購買</button>
+    </div>
+  </div>
+
+  <div class="service-card">
+    <div class="service-info">
+      <h3>💼 就業全包 · Work Pack</h3>
+      <p>E-7 簽證策略、履歷優化、面試準備、韓國職場潛規則——在韓國站穩腳步。</p>
+    </div>
+    <div class="service-price">
+      <div class="price">$2,499</div>
+      <div class="sub">USD · 一次性</div>
+      <button class="btn-buy" onclick="openModal('就業全包',2499)">立即購買</button>
+    </div>
+  </div>
+
+  <div class="service-card">
+    <div class="service-info">
+      <h3>💬 1:1 諮詢 · Consultation</h3>
+      <p>問題太複雜、情況太特殊？攻略沒辦法解決的，直接跟我說。30 分鐘一對一。</p>
+    </div>
+    <div class="service-price">
+      <div class="price">$2,499</div>
+      <div class="sub">USD · 一次性</div>
+      <button class="btn-buy" onclick="openModal('1:1 諮詢',2499)">立即預約</button>
+    </div>
+  </div>
+</section>
+
+<!-- FLOW -->
+<section>
+  <h2>購買流程</h2>
+  <div class="flow">
+    <div class="flow-step">
+      <div class="step-num">1</div>
+      <div class="step-body">
+        <h4>點擊購買 → 看到匯款資訊</h4>
+        <p>選擇台灣中國信託或韓國하나은행，完成匯款。</p>
+      </div>
+    </div>
+    <div class="flow-step">
+      <div class="step-num">2</div>
+      <div class="step-body">
+        <h4>截圖傳給我（LINE）</h4>
+        <p>匯款完成後，把截圖傳到 LINE，我會在 24 小時內確認。</p>
+      </div>
+    </div>
+    <div class="flow-step">
+      <div class="step-num">3</div>
+      <div class="step-body">
+        <h4>確認後開始服務</h4>
+        <p>我確認收款後，立即傳送服務連結並安排時間開始。</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <strong>SEOULMATE 31</strong><br>
+  居韓第10年。台灣人在韓國的第一手資訊基地。<br><br>
+  © 2025 SEOULMATE 31. All rights reserved.
+</footer>
+
+<!-- MODAL -->
+<div class="modal-overlay" id="payModal">
+  <div class="modal">
+    <button class="modal-x" onclick="closeModal()">✕</button>
+    <h3>匯款資訊</h3>
+    <p class="subtitle">請選擇以下任一帳戶完成匯款，匯款後截圖傳給我確認。</p>
+
+    <div class="bank-card">
+      <div class="bank-name">🇹🇼 台灣 · 中國信託</div>
+      <div class="bank-row"><span>銀行代碼</span><span>822</span></div>
+      <div class="bank-row"><span>帳號</span><span id="tw-acc">[請填入帳號]</span></div>
+      <div class="bank-row"><span>戶名</span><span id="tw-name">[請填入戶名]</span></div>
+    </div>
+
+    <div class="bank-card">
+      <div class="bank-name">🇰🇷 韓國 · 하나은행</div>
+      <div class="bank-row"><span>銀行代碼</span><span>081</span></div>
+      <div class="bank-row"><span>帳號</span><span id="kr-acc">[請填入帳號]</span></div>
+      <div class="bank-row"><span>戶名</span><span id="kr-name">[請填入戶名]</span></div>
+    </div>
+
+    <div class="modal-note">
+      💬 匯款完成後，請截圖傳至 LINE，我會在 24 小時內確認並發送服務連結。
+    </div>
+    <div class="modal-amount">金額：<strong id="modal-price">USD $2,499</strong>　服務：<span id="modal-service">—</span></div>
+
+    <a class="btn-line" id="line-btn" href="https://line.me/ti/p/XXXXXXXXXX" target="_blank">📲 傳截圖給我（LINE）</a>
+    <button class="btn-close" onclick="closeModal()">關閉</button>
+  </div>
+</div>
+
+<script>
+function openModal(service, price){
+  document.getElementById('modal-service').textContent = service;
+  document.getElementById('modal-price').textContent = 'USD $' + price.toLocaleString();
+  document.getElementById('payModal').classList.add('open');
+}
+function closeModal(){
+  document.getElementById('payModal').classList.remove('open');
+}
+document.getElementById('payModal').addEventListener('click', function(e){
+  if(e.target === this) closeModal();
+});
+</script>
+</body>
+</html>
