@@ -1,0 +1,708 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>影片自動化工作台 — SEOULMATE 31</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  :root{
+    --black:#0d0d0d;
+    --cream:#f5f0e8;
+    --red:#c0392b;
+    --gray:#6b6b6b;
+    --border:#e0dbd0;
+    --green:#06c755;
+  }
+  body{font-family:'Helvetica Neue',Arial,'PingFang TC','Microsoft JhengHei',sans-serif;background:var(--cream);color:var(--black);line-height:1.6}
+  a{color:inherit;text-decoration:none}
+
+  /* NAV */
+  nav{background:var(--black);padding:16px 24px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
+  .logo{color:#fff;font-size:18px;font-weight:700;letter-spacing:2px}
+  .logo span{color:var(--red)}
+  .nav-title{color:#ccc;font-size:13px;letter-spacing:1px}
+
+  /* HEADER */
+  .page-head{background:var(--black);color:#fff;padding:40px 24px 32px;text-align:center}
+  .page-head .tag{font-size:12px;letter-spacing:3px;color:var(--red);text-transform:uppercase;margin-bottom:12px}
+  .page-head h1{font-size:clamp(26px,4vw,40px);font-weight:900;line-height:1.2;margin-bottom:12px}
+  .page-head p{font-size:15px;color:#bbb;max-width:560px;margin:0 auto}
+
+  /* TABS */
+  .tabs{display:flex;gap:8px;max-width:960px;margin:24px auto 0;padding:0 24px;flex-wrap:wrap}
+  .tab{background:#fff;border:1px solid var(--border);border-radius:6px;padding:10px 20px;font-size:14px;font-weight:700;cursor:pointer;color:var(--gray)}
+  .tab.active{background:var(--black);color:#fff;border-color:var(--black)}
+  .panel{display:none;max-width:960px;margin:0 auto;padding:24px}
+  .panel.active{display:block}
+
+  h2{font-size:22px;font-weight:800;margin:8px 0 20px;border-left:4px solid var(--red);padding-left:14px}
+  .hint{font-size:13px;color:var(--gray);margin-bottom:20px}
+
+  /* CONTROLS */
+  .controls{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:20px;align-items:flex-end}
+  .field{display:flex;flex-direction:column;gap:6px}
+  .field label{font-size:12px;font-weight:700;color:var(--gray);letter-spacing:1px}
+  select{padding:10px 14px;border:1px solid var(--border);border-radius:6px;background:#fff;font-size:14px;font-family:inherit;min-width:160px}
+  .btn{display:inline-block;background:var(--red);color:#fff;padding:11px 24px;border-radius:6px;font-size:14px;font-weight:700;cursor:pointer;border:none;font-family:inherit}
+  .btn:hover{background:#a93226}
+  .btn.dark{background:var(--black)}
+  .btn.dark:hover{background:#333}
+  .btn.ghost{background:#fff;color:var(--black);border:1px solid var(--border)}
+  .btn.ghost:hover{background:#efe9dd}
+  .btn.small{padding:6px 14px;font-size:12px}
+
+  /* CARDS */
+  .card{background:#fff;border:1px solid var(--border);border-radius:8px;padding:24px;margin-bottom:20px}
+  .card h3{font-size:16px;font-weight:800;margin-bottom:14px;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+  .badge{display:inline-block;background:var(--cream);border:1px solid var(--border);border-radius:4px;padding:2px 10px;font-size:12px;font-weight:700;color:var(--gray)}
+  .badge.red{background:var(--red);color:#fff;border-color:var(--red)}
+
+  /* SCRIPT TABLE */
+  table{width:100%;border-collapse:collapse;font-size:14px}
+  th{background:var(--black);color:#fff;padding:10px 12px;text-align:left;font-size:12px;letter-spacing:1px;white-space:nowrap}
+  td{padding:12px;border-bottom:1px solid var(--border);vertical-align:top}
+  tr:last-child td{border-bottom:none}
+  .t-time{white-space:nowrap;font-weight:800;color:var(--red)}
+  .t-card{font-size:13px;color:var(--gray)}
+  .table-wrap{overflow-x:auto}
+
+  /* CAPTION */
+  .caption-box{background:var(--cream);border:1px solid var(--border);border-radius:8px;padding:18px;font-size:14px;white-space:pre-wrap;line-height:1.8}
+
+  /* SCHEDULE */
+  .sched-type{font-weight:800}
+  .sched-hook{font-size:13px;color:var(--gray)}
+
+  /* HOOK LIBRARY */
+  .hook-item{display:flex;justify-content:space-between;align-items:center;gap:16px;background:#fff;border:1px solid var(--border);border-radius:8px;padding:14px 18px;margin-bottom:10px}
+  .hook-item .txt{font-size:15px;font-weight:600}
+  .hook-item .meta{font-size:12px;color:var(--gray);margin-top:2px}
+  .filter-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}
+  .chip{background:#fff;border:1px solid var(--border);border-radius:20px;padding:6px 16px;font-size:13px;font-weight:600;cursor:pointer;color:var(--gray)}
+  .chip.active{background:var(--red);color:#fff;border-color:var(--red)}
+
+  /* SOP */
+  .sop-step{display:flex;gap:16px;align-items:flex-start;padding:16px 0;border-bottom:1px solid var(--border)}
+  .sop-step:last-child{border-bottom:none}
+  .sop-num{background:var(--red);color:#fff;width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:14px;flex-shrink:0;margin-top:2px}
+  .sop-step h4{font-size:15px;font-weight:700;margin-bottom:2px}
+  .sop-step p{font-size:14px;color:var(--gray)}
+  .formula{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;margin:16px 0}
+  .formula .f-card{background:var(--cream);border:1px solid var(--border);border-radius:8px;padding:16px}
+  .formula .f-card .n{font-size:22px;font-weight:900;color:var(--red)}
+  .formula .f-card h4{font-size:14px;font-weight:800;margin:4px 0}
+  .formula .f-card p{font-size:13px;color:var(--gray)}
+
+  /* TOAST */
+  #toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--black);color:#fff;padding:12px 28px;border-radius:8px;font-size:14px;font-weight:700;transition:transform .25s;z-index:999}
+  #toast.show{transform:translateX(-50%) translateY(0)}
+
+  footer{background:var(--black);color:#888;text-align:center;padding:28px 24px;font-size:13px;margin-top:40px}
+  footer strong{color:#fff}
+</style>
+</head>
+<body>
+
+<nav>
+  <a class="logo" href="index.html">SEOULMATE <span>31</span></a>
+  <div class="nav-title">影片自動化工作台 · 內部工具</div>
+</nav>
+
+<div class="page-head">
+  <div class="tag">Video Automation</div>
+  <h1>短影音，從想題目到發佈<br>一條線跑完。</h1>
+  <p>選類型、選主題，腳本、分鏡、文案、hashtag 自動生成。每週排程一鍵排好，匯出就能開拍。</p>
+</div>
+
+<div class="tabs">
+  <div class="tab active" data-panel="p-script">🎬 腳本產生器</div>
+  <div class="tab" data-panel="p-sched">📅 本週排程</div>
+  <div class="tab" data-panel="p-hooks">🪝 鉤子庫</div>
+  <div class="tab" data-panel="p-sop">📖 玩法說明</div>
+</div>
+
+<!-- ============ PANEL: SCRIPT ============ -->
+<div class="panel active" id="p-script">
+  <h2>腳本產生器</h2>
+  <p class="hint">三句話公式：句 1 戳痛點 → 句 2 反轉解法 → 句 3 CTA。選好按「產生腳本」，不滿意就再按一次換版本。</p>
+
+  <div class="controls">
+    <div class="field">
+      <label>影片類型</label>
+      <select id="sel-type"></select>
+    </div>
+    <div class="field">
+      <label>主題</label>
+      <select id="sel-topic"></select>
+    </div>
+    <div class="field">
+      <label>長度</label>
+      <select id="sel-dur">
+        <option value="15">15 秒</option>
+        <option value="30" selected>30 秒</option>
+        <option value="45">45 秒</option>
+      </select>
+    </div>
+    <button class="btn" onclick="genScript()">⚡ 產生腳本</button>
+    <button class="btn ghost" onclick="randomScript()">🎲 隨機來一支</button>
+  </div>
+
+  <div id="script-out"></div>
+</div>
+
+<!-- ============ PANEL: SCHEDULE ============ -->
+<div class="panel" id="p-sched">
+  <h2>本週排程</h2>
+  <p class="hint">照策略頻率自動排：現場實錄每週 3 支、真相揭露 2 支、客戶故事 1 支、週日留給熱點借力。主題自動輪換不重複。</p>
+
+  <div class="controls">
+    <button class="btn" onclick="genSchedule()">⚡ 產生本週排程</button>
+    <button class="btn dark" onclick="exportCSV()">⬇ 匯出 CSV</button>
+    <button class="btn ghost" onclick="copySchedule()">📋 複製文字版</button>
+  </div>
+
+  <div class="card">
+    <div class="table-wrap">
+      <table id="sched-table">
+        <thead>
+          <tr><th>星期</th><th>類型</th><th>主題</th><th>鉤子（第一句）</th><th>發布時間</th><th>對應服務</th></tr>
+        </thead>
+        <tbody id="sched-body">
+          <tr><td colspan="6" style="text-align:center;color:var(--gray)">按上方「產生本週排程」開始。</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ============ PANEL: HOOKS ============ -->
+<div class="panel" id="p-hooks">
+  <h2>鉤子庫</h2>
+  <p class="hint">沒有鉤子，沒人停下來。大家不是討厭你的內容，是根本沒看到。點右邊直接複製。</p>
+  <div class="filter-row" id="hook-filters"></div>
+  <div id="hook-list"></div>
+</div>
+
+<!-- ============ PANEL: SOP ============ -->
+<div class="panel" id="p-sop">
+  <h2>玩法說明</h2>
+
+  <div class="card">
+    <h3>三句話公式</h3>
+    <div class="formula">
+      <div class="f-card">
+        <div class="n">1</div>
+        <h4>戳痛點 / 製造驚訝</h4>
+        <p>「你知道在韓國辦登錄證要等多久嗎？」讓人停下來的那一句。</p>
+      </div>
+      <div class="f-card">
+        <div class="n">2</div>
+        <h4>反轉 / 解法</h4>
+        <p>「我幫你搶，你的等三天，其他人等三週。」給出別人給不了的答案。</p>
+      </div>
+      <div class="f-card">
+        <div class="n">3</div>
+        <h4>CTA</h4>
+        <p>「連結在 bio，先聊一次免費。」永遠給一個下一步。</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>每週節奏</h3>
+    <div class="sop-step"><div class="sop-num">1</div><div><h4>現場實錄 · 每週 2–3 支</h4><p>排隊、代搶、辦手續現場。不是教學影片，是「我在現場」的真實感。</p></div></div>
+    <div class="sop-step"><div class="sop-num">2</div><div><h4>真相揭露 · 每週 1–2 支</h4><p>「韓國租房沒人告訴你的事」。免費資訊通常最貴，我們講真的。</p></div></div>
+    <div class="sop-step"><div class="sop-num">3</div><div><h4>客戶故事 · 每月 4–6 支</h4><p>15 秒，她落地第一天做了什麼。「他跟我一樣，他成功了」就是信任。</p></div></div>
+    <div class="sop-step"><div class="sop-num">4</div><div><h4>熱點借力 · 即時</h4><p>新政策、熱門演唱會，事件發生 48 小時內要出片。</p></div></div>
+    <div class="sop-step"><div class="sop-num">5</div><div><h4>限量日常 · 不定期</h4><p>限量開箱、搶到的瞬間。「你搶不到的，我幫你留著。」</p></div></div>
+  </div>
+
+  <div class="card">
+    <h3>從這個工作台到發佈</h3>
+    <div class="sop-step"><div class="sop-num">1</div><div><h4>週日晚上：產生本週排程</h4><p>「本週排程」按一下，匯出 CSV，一週的拍片清單就定了。</p></div></div>
+    <div class="sop-step"><div class="sop-num">2</div><div><h4>拍之前：產生腳本</h4><p>照排程選類型和主題，分鏡表照著拍，口播稿照著念。</p></div></div>
+    <div class="sop-step"><div class="sop-num">3</div><div><h4>剪完：複製文案</h4><p>caption 和 hashtag 已經生成好，貼上就發。</p></div></div>
+    <div class="sop-step"><div class="sop-num">4</div><div><h4>發佈後：把流量收進來</h4><p>bio 連結指向官網，落地頁收單。每支影片的 CTA 都是同一句：先聊一次，免費。</p></div></div>
+  </div>
+
+  <div class="card">
+    <h3>品牌語言守則</h3>
+    <p style="font-size:14px;color:var(--gray);line-height:2">
+      ▸ 全程用「你」和「我們」，不說「客戶」「用戶」。<br>
+      ▸ 短句優先，像說話，不像寫作文。<br>
+      ▸ 每句話背後要有一個具體場景。<br>
+      ▸ 不說「諮詢」，說「先聊一次」。<br>
+      ▸ 正文不出現韓文（品牌名稱 SEOULMATE31 除外）。
+    </p>
+  </div>
+</div>
+
+<footer>
+  <strong>SEOULMATE 31</strong> · 影片自動化工作台<br>
+  內容策略 v1.0 · 內部工具，請勿對外分享連結。
+</footer>
+
+<div id="toast">已複製 ✓</div>
+
+<script>
+/* ============================================================
+   資料庫：主題（來自行銷策略 Phase 1 — Arrival 主題群）
+   ============================================================ */
+const TOPICS = [
+  {
+    id:'sop', name:'入境第一週 SOP', tag:'落地', scene:'仁川機場入境大廳',
+    pain:'落地第一週，每件事都卡在另一件事後面',
+    shock:'順序對了，三天搞定。順序錯了，拖一個月',
+    truths:[
+      '先辦登錄證才能開戶，先開戶才能辦月租門號',
+      '第一週的順序，決定你第一個月的進度',
+      '大部分人卡住，不是不努力，是不知道先做哪一件'
+    ],
+    service:'落地全包', ctaLine:'第一個月的所有手續，我們一次幫你排好',
+    storyResult:'把第一週該辦的全部辦完',
+    hashtags:['韓國落地','首爾新生活']
+  },
+  {
+    id:'arc', name:'外國人登錄證 ARC', tag:'落地', scene:'出入境事務所門口',
+    pain:'預約排到三週後，沒這張卡什麼都辦不了',
+    shock:'沒有這張卡，你在韓國連網購都不行',
+    truths:[
+      '沒有登錄證，開戶、門號、網購全部卡住',
+      '預約快慢跟管轄區有關，換一區能差兩週',
+      '照片規格錯一次，就要重新再排一次'
+    ],
+    service:'ARC 快速預約', ctaLine:'我們幫你搶最快的預約',
+    storyResult:'拿到自己的登錄證',
+    hashtags:['ARC','外國人登錄證']
+  },
+  {
+    id:'rent', name:'韓國租屋', tag:'落地', scene:'不動產門口',
+    pain:'押金一交就是幾百萬韓元，合約全是韓文',
+    shock:'押金拿不回來的人，幾乎都在同一步出錯',
+    truths:[
+      '合約上少一行字，押金就可能拿不回來',
+      '房東口頭說的「馬上修」，簽約前要寫進合約',
+      '管理費裡包什麼，要一條一條問清楚'
+    ],
+    service:'租屋諮詢', ctaLine:'簽約之前，先讓我們看一眼',
+    storyResult:'簽下第一間自己的房子',
+    hashtags:['韓國租屋','首爾租房']
+  },
+  {
+    id:'bank', name:'銀行開戶', tag:'落地', scene:'銀行門口',
+    pain:'被櫃檯拒絕三次，理由每次都不一樣',
+    shock:'同一家銀行，不同分行的規定可以完全不同',
+    truths:[
+      '外國人開戶，每間分行的標準不一樣',
+      '剛入境就去，多半會被請回來',
+      '帶對文件走對分行，十分鐘就辦完'
+    ],
+    service:'落地陪同', ctaLine:'我們帶你去對的那一間',
+    storyResult:'有了自己的韓國戶頭',
+    hashtags:['韓國開戶','韓國銀行']
+  },
+  {
+    id:'sim', name:'手機門號', tag:'落地', scene:'機場電信櫃檯',
+    pain:'沒有登錄證辦不了月租，預付卡又貴',
+    shock:'落地當天能辦的，其實只有一種方案',
+    truths:[
+      '落地當天能辦的只有預付卡',
+      '月租綁約要等登錄證，時間點要抓對',
+      '機場櫃檯最方便，但不一定最划算'
+    ],
+    service:'落地陪同', ctaLine:'哪天辦哪種，我們幫你抓好時間',
+    storyResult:'用上韓國門號',
+    hashtags:['韓國門號','韓國網卡']
+  },
+  {
+    id:'h1', name:'打工度假 H1 簽證', tag:'簽證', scene:'駐台代表處門口',
+    pain:'公證三關，一關跑錯全部重來',
+    shock:'名額有限，資料慢一步就是等明年',
+    truths:[
+      '公證有三關：地方法院、外交部、駐台代表處',
+      '文件順序錯了，就要整套重跑',
+      '開放申請當天，名額幾小時內就滿'
+    ],
+    service:'H1 全包', ctaLine:'三關我們一次幫你跑完',
+    storyResult:'拿到打工度假簽證',
+    hashtags:['打工度假','H1簽證']
+  },
+  {
+    id:'lang', name:'語學堂入學', tag:'留學', scene:'大學語學堂門口',
+    pain:'六間學校看起來都一樣，學費卻差一倍',
+    shock:'選錯學期入學，等於多付三個月房租',
+    truths:[
+      '每間語學堂開學時間不同，銜接錯就空等一季',
+      '宿舍先搶先贏，慢了只能住外面',
+      '延簽跟出席率綁在一起，翹課是有代價的'
+    ],
+    service:'入學起跑包', ctaLine:'選校到入學，我們陪你跑完',
+    storyResult:'坐進語學堂的教室',
+    hashtags:['語學堂','韓國留學']
+  },
+  {
+    id:'d4', name:'留學 D4 簽證', tag:'簽證', scene:'代表處領件窗口',
+    pain:'文件清單看起來簡單，退件理由千奇百怪',
+    shock:'學校錄取了，簽證流程才正要開始',
+    truths:[
+      '財力證明的金額和存期都有眉角',
+      '錄取通知只是起點，送件時間才是關鍵',
+      '時間抓錯，開學就趕不上'
+    ],
+    service:'入學起跑包', ctaLine:'送件時間我們幫你抓',
+    storyResult:'簽證一次過件',
+    hashtags:['D4簽證','韓國留學']
+  },
+  {
+    id:'cost', name:'韓國生活費', tag:'生活', scene:'超市結帳台',
+    pain:'網路上的數字，跟你實際花的差很多',
+    shock:'一個月 100 萬韓元，在首爾是活得下去，還是活得好？',
+    truths:[
+      '房租以外，管理費和保證金才是大魔王',
+      '自己煮不一定省，要看你住哪一區',
+      '交通比你想的便宜，咖啡比你想的貴'
+    ],
+    service:'1:1 先聊一次', ctaLine:'你的預算夠不夠，我們算給你看',
+    storyResult:'把每月開銷壓進預算',
+    hashtags:['韓國生活費','首爾物價']
+  },
+  {
+    id:'drop', name:'限量代購', tag:'代購', scene:'球鞋店門口',
+    pain:'你搶不到的，不是手速慢，是管道不對',
+    shock:'排隊代排，在首爾是真實存在的行業',
+    truths:[
+      '熱門場次開賣前一週就要開始準備',
+      '韓國本地帳號和付款方式，差很多',
+      '你在台灣搶不到的，首爾門口排得到'
+    ],
+    service:'限量代購', ctaLine:'你搶不到的，我們幫你留著',
+    storyResult:'拿到搶了半年的那一雙',
+    hashtags:['韓國代購','限量']
+  }
+];
+
+/* ============================================================
+   影片類型與鉤子模板（三句話公式：句1 鉤子模板在此）
+   ============================================================ */
+const TYPES = [
+  {
+    id:'live', name:'現場實錄', freq:'每週 2–3 支',
+    shot:'手持實拍，走動跟拍，現場收音',
+    hooks:[
+      t=>`現在是首爾早上七點，我人在${t.scene}，排第三個。`,
+      t=>`這裡是${t.scene}。我替你排了四個小時。`,
+      t=>`你知道在韓國辦「${t.name}」要等多久嗎？`,
+      t=>`今天不講理論。我直接帶你去${t.scene}。`
+    ]
+  },
+  {
+    id:'truth', name:'真相揭露', freq:'每週 1–2 支',
+    shot:'定機位口播，重點上字卡',
+    hooks:[
+      t=>`${t.name}，沒人告訴你的三件事。`,
+      t=>`在韓國處理「${t.name}」之前，先看完這 30 秒。`,
+      t=>`${t.shock}。`,
+      t=>`關於${t.name}，網路上的免費資訊，通常最貴。`
+    ]
+  },
+  {
+    id:'story', name:'客戶故事', freq:'每月 4–6 支',
+    shot:'素材混剪＋旁白，結尾定格',
+    hooks:[
+      t=>`她落地第一天，就${t.storyResult}了。`,
+      t=>`三週前她還在台灣。今天她已經${t.storyResult}。`,
+      t=>`她跟你一樣，出發前最怕的就是${t.name}。`
+    ]
+  },
+  {
+    id:'trend', name:'熱點借力', freq:'即時（48 小時內）',
+    shot:'新聞畫面截圖＋口播，節奏快',
+    hooks:[
+      t=>`韓國又改規定了：${t.name}，最新變化。`,
+      t=>`這週最多人來問我們的，就是${t.name}。`,
+      t=>`剛剛公布的消息，跟每個要來韓國的人都有關。`
+    ]
+  },
+  {
+    id:'drop', name:'限量日常', freq:'不定期',
+    shot:'開箱特寫，手部畫面為主',
+    hooks:[
+      t=>`開箱。這是你在台灣搶不到的那一個。`,
+      t=>`搶到的瞬間，長這樣。`,
+      t=>`${t.pain}。`
+    ]
+  }
+];
+
+/* 句 2（反轉／解法）模板 */
+const SOLVES = [
+  t=>`${t.truths[0]}。`,
+  t=>`${t.ctaLine}——你的等三天，其他人等三週。`,
+  t=>`重點只有一個：${t.truths[1]}。`
+];
+
+/* 句 3（CTA）模板 */
+const CTAS = [
+  ()=>`連結在 bio，先聊一次免費。`,
+  ()=>`不確定自己的情況？先聊一次，免費。`,
+  t=>`需要「${t.service}」，直接私訊我們。`
+];
+
+const BASE_TAGS = ['韓國生活','台灣人在韓國','首爾','韓國留學','SEOULMATE31'];
+
+/* ============================================================
+   工具
+   ============================================================ */
+const $ = id => document.getElementById(id);
+const pick = arr => arr[Math.floor(Math.random()*arr.length)];
+const shuffle = arr => arr.slice().sort(()=>Math.random()-0.5);
+
+function toast(msg){
+  const el = $('toast');
+  el.textContent = msg || '已複製 ✓';
+  el.classList.add('show');
+  setTimeout(()=>el.classList.remove('show'), 1600);
+}
+function copyText(text){
+  navigator.clipboard.writeText(text).then(()=>toast()).catch(()=>{
+    const ta = document.createElement('textarea');
+    ta.value = text; document.body.appendChild(ta);
+    ta.select(); document.execCommand('copy'); ta.remove(); toast();
+  });
+}
+
+/* ============================================================
+   腳本產生
+   ============================================================ */
+function buildScript(topic, type, dur){
+  const hook  = pick(type.hooks)(topic);
+  const solve = pick(SOLVES)(topic);
+  const cta   = pick(CTAS)(topic);
+  const rows = [];
+
+  if(dur === 15){
+    rows.push({time:'0–3 秒',  talk:hook,  card:shortCard(hook),        shotNote:'開場直視鏡頭／現場畫面'});
+    rows.push({time:'3–11 秒', talk:solve, card:shortCard(solve),       shotNote:type.shot});
+    rows.push({time:'11–15 秒',talk:cta,   card:'先聊一次，免費',        shotNote:'字卡收尾＋指向 bio'});
+  } else if(dur === 30){
+    rows.push({time:'0–3 秒',  talk:hook,  card:shortCard(hook),        shotNote:'開場直視鏡頭／現場畫面'});
+    rows.push({time:'3–8 秒',  talk:`${topic.pain}。`, card:'很多人都卡在這', shotNote:type.shot});
+    topic.truths.forEach((tr,i)=>{
+      rows.push({time:`${8+i*5}–${13+i*5} 秒`, talk:`${tr}。`, card:`重點 ${i+1}`, shotNote:'字卡逐點出現'});
+    });
+    rows.push({time:'23–30 秒',talk:`${topic.ctaLine}。${cta}`, card:'先聊一次，免費', shotNote:'字卡收尾＋指向 bio'});
+  } else {
+    rows.push({time:'0–3 秒',  talk:hook,  card:shortCard(hook),        shotNote:'開場直視鏡頭／現場畫面'});
+    rows.push({time:'3–10 秒', talk:`${topic.pain}。${topic.shock}。`, card:shortCard(topic.shock), shotNote:type.shot});
+    topic.truths.forEach((tr,i)=>{
+      rows.push({time:`${10+i*7}–${17+i*7} 秒`, talk:`${tr}。`, card:`重點 ${i+1}`, shotNote:'字卡逐點出現'});
+    });
+    rows.push({time:'31–38 秒',talk:`上個月有人跟你情況一樣。現在她已經${topic.storyResult}。`, card:'真實案例', shotNote:'插入案例畫面／對話截圖（去識別化）'});
+    rows.push({time:'38–45 秒',talk:`${topic.ctaLine}。${cta}`, card:'先聊一次，免費', shotNote:'字卡收尾＋指向 bio'});
+  }
+
+  const caption = [
+    hook,
+    '',
+    topic.truths.map(x=>`▸ ${x}`).join('\n'),
+    '',
+    `${topic.ctaLine}。`,
+    '連結在 bio，先聊一次免費。',
+    '',
+    [...BASE_TAGS, ...topic.hashtags].map(x=>'#'+x).join(' ')
+  ].join('\n');
+
+  return {hook, rows, caption};
+}
+
+function shortCard(s){
+  return s.length > 18 ? s.slice(0,17)+'…' : s;
+}
+
+function renderScript(topic, type, dur){
+  const s = buildScript(topic, type, dur);
+  const talkAll = s.rows.map(r=>`【${r.time}】${r.talk}`).join('\n');
+  const rowsHtml = s.rows.map(r=>`
+    <tr>
+      <td class="t-time">${r.time}</td>
+      <td>${r.talk}</td>
+      <td class="t-card">${r.card}</td>
+      <td class="t-card">${r.shotNote}</td>
+    </tr>`).join('');
+
+  $('script-out').innerHTML = `
+    <div class="card">
+      <h3>
+        <span>${type.name} · ${topic.name} · ${dur} 秒</span>
+        <span><span class="badge red">${type.freq}</span> <span class="badge">${topic.service}</span></span>
+      </h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>時間</th><th>口播</th><th>螢幕字卡</th><th>畫面建議</th></tr></thead>
+          <tbody>${rowsHtml}</tbody>
+        </table>
+      </div>
+      <div style="margin-top:16px;display:flex;gap:10px;flex-wrap:wrap">
+        <button class="btn dark small" onclick='copyText(${JSON.stringify(talkAll)})'>📋 複製口播稿</button>
+        <button class="btn ghost small" onclick="genScript()">🔄 換一個版本</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3><span>發佈文案（IG / TikTok）</span></h3>
+      <div class="caption-box" id="cap-box">${s.caption.replace(/</g,'&lt;')}</div>
+      <div style="margin-top:14px">
+        <button class="btn dark small" onclick='copyText(${JSON.stringify(s.caption)})'>📋 複製文案＋hashtag</button>
+      </div>
+    </div>`;
+}
+
+function genScript(){
+  const type  = TYPES.find(x=>x.id === $('sel-type').value);
+  const topic = TOPICS.find(x=>x.id === $('sel-topic').value);
+  const dur   = parseInt($('sel-dur').value, 10);
+  renderScript(topic, type, dur);
+}
+
+function randomScript(){
+  $('sel-type').value  = pick(TYPES).id;
+  $('sel-topic').value = pick(TOPICS).id;
+  $('sel-dur').value   = pick(['15','30','45']);
+  genScript();
+}
+
+/* ============================================================
+   本週排程
+   ============================================================ */
+const WEEK_PLAN = [
+  {day:'週一', typeId:'truth', time:'19:00'},
+  {day:'週二', typeId:'live',  time:'12:30'},
+  {day:'週三', typeId:'story', time:'19:00'},
+  {day:'週四', typeId:'live',  time:'19:00'},
+  {day:'週五', typeId:'truth', time:'12:30'},
+  {day:'週六', typeId:'live',  time:'11:00'},
+  {day:'週日', typeId:'trend', time:'20:00'}
+];
+
+let currentSchedule = [];
+
+function genSchedule(){
+  const topics = shuffle(TOPICS);
+  currentSchedule = WEEK_PLAN.map((slot,i)=>{
+    const type  = TYPES.find(x=>x.id === slot.typeId);
+    const topic = topics[i % topics.length];
+    const hook  = pick(type.hooks)(topic);
+    return {day:slot.day, type:type.name, topic:topic.name, hook, time:slot.time, service:topic.service};
+  });
+  renderSchedule();
+  try{ localStorage.setItem('sm31-schedule', JSON.stringify(currentSchedule)); }catch(e){}
+  toast('本週排程已產生 ✓');
+}
+
+function renderSchedule(){
+  if(!currentSchedule.length) return;
+  $('sched-body').innerHTML = currentSchedule.map(r=>`
+    <tr>
+      <td class="t-time">${r.day}</td>
+      <td class="sched-type">${r.type}</td>
+      <td>${r.topic}</td>
+      <td class="sched-hook">${r.hook}</td>
+      <td>${r.time}</td>
+      <td class="t-card">${r.service}</td>
+    </tr>`).join('');
+}
+
+function scheduleText(){
+  return currentSchedule.map(r=>`${r.day}｜${r.type}｜${r.topic}｜${r.time}\n　鉤子：${r.hook}`).join('\n');
+}
+
+function copySchedule(){
+  if(!currentSchedule.length){ toast('先產生排程'); return; }
+  copyText('SEOULMATE31 本週影片排程\n\n' + scheduleText());
+}
+
+function exportCSV(){
+  if(!currentSchedule.length){ toast('先產生排程'); return; }
+  const head = ['星期','類型','主題','鉤子','發布時間','對應服務','狀態'];
+  const esc = v => `"${String(v).replace(/"/g,'""')}"`;
+  const lines = [head.map(esc).join(',')]
+    .concat(currentSchedule.map(r=>[r.day,r.type,r.topic,r.hook,r.time,r.service,'未拍'].map(esc).join(',')));
+  const blob = new Blob(['﻿'+lines.join('\r\n')], {type:'text/csv;charset=utf-8'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'seoulmate31-weekly-schedule.csv';
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(a.href);
+}
+
+/* ============================================================
+   鉤子庫
+   ============================================================ */
+let hookFilter = 'all';
+
+function renderHookFilters(){
+  const chips = [{id:'all',name:'全部'}].concat(TYPES.map(t=>({id:t.id,name:t.name})));
+  $('hook-filters').innerHTML = chips.map(c=>
+    `<div class="chip ${hookFilter===c.id?'active':''}" onclick="setHookFilter('${c.id}')">${c.name}</div>`
+  ).join('');
+}
+
+function setHookFilter(id){
+  hookFilter = id;
+  renderHookFilters();
+  renderHooks();
+}
+
+function renderHooks(){
+  const items = [];
+  TYPES.forEach(type=>{
+    if(hookFilter !== 'all' && hookFilter !== type.id) return;
+    TOPICS.forEach(topic=>{
+      type.hooks.forEach(fn=>{
+        const txt = fn(topic);
+        items.push({txt, type:type.name, topic:topic.name});
+      });
+    });
+  });
+  const seen = new Set();
+  const unique = items.filter(x=>{ if(seen.has(x.txt)) return false; seen.add(x.txt); return true; });
+  $('hook-list').innerHTML = unique.map(x=>`
+    <div class="hook-item">
+      <div>
+        <div class="txt">${x.txt}</div>
+        <div class="meta">${x.type} · ${x.topic}</div>
+      </div>
+      <button class="btn ghost small" onclick='copyText(${JSON.stringify(x.txt)})'>複製</button>
+    </div>`).join('');
+}
+
+/* ============================================================
+   初始化
+   ============================================================ */
+document.querySelectorAll('.tab').forEach(tab=>{
+  tab.addEventListener('click', ()=>{
+    document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+    document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+    tab.classList.add('active');
+    $(tab.dataset.panel).classList.add('active');
+  });
+});
+
+$('sel-type').innerHTML  = TYPES.map(t=>`<option value="${t.id}">${t.name}（${t.freq}）</option>`).join('');
+$('sel-topic').innerHTML = TOPICS.map(t=>`<option value="${t.id}">${t.name}</option>`).join('');
+
+renderHookFilters();
+renderHooks();
+
+try{
+  const saved = localStorage.getItem('sm31-schedule');
+  if(saved){ currentSchedule = JSON.parse(saved); renderSchedule(); }
+}catch(e){}
+
+genScript();
+</script>
+</body>
+</html>

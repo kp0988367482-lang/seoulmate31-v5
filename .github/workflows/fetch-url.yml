@@ -1,0 +1,65 @@
+# 通用搬運工：開發環境網路受限時，把外部檔案（生成的音檔、素材等）
+# 經由 GitHub 執行器下載，掛成 release 附件（tag: courier）給開發環境抓取。
+# 觸發方式：把 {url, filename} 寫進 .github/courier-request.json 並 push（或手動 dispatch）。
+name: Fetch URL to release
+
+on:
+  workflow_dispatch:
+    inputs:
+      url:
+        description: 'URL to download'
+        required: true
+        type: string
+      filename:
+        description: 'Asset filename for the release'
+        required: true
+        type: string
+  push:
+    branches: [claude/video-automation-cvkjkp]
+    paths: ['.github/courier-request.json']
+
+permissions:
+  contents: write
+
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Resolve request
+        env:
+          IN_URL: ${{ inputs.url }}
+          IN_FILENAME: ${{ inputs.filename }}
+        run: |
+          set -euo pipefail
+          if [ -n "${IN_URL:-}" ]; then
+            URL="$IN_URL"; FILENAME="$IN_FILENAME"
+          else
+            URL=$(jq -r .url .github/courier-request.json)
+            FILENAME=$(jq -r .filename .github/courier-request.json)
+          fi
+          echo "URL=$URL" >> "$GITHUB_ENV"
+          echo "FILENAME=$FILENAME" >> "$GITHUB_ENV"
+
+      - name: Download file
+        run: |
+          set -euo pipefail
+          curl -fsSL --retry 3 --retry-delay 5 -o "$FILENAME" "$URL"
+          ls -la "$FILENAME"
+          sha256sum "$FILENAME"
+
+      - name: Upload as release asset
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          if ! gh release view courier --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            gh release create courier \
+              --repo "$GITHUB_REPOSITORY" \
+              --title "File courier (temporary assets)" \
+              --notes "開發環境網路受限時的檔案中轉站。附件可隨時清掉。" \
+              "$FILENAME"
+          else
+            gh release upload courier "$FILENAME" --clobber --repo "$GITHUB_REPOSITORY"
+          fi

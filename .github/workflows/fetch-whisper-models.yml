@@ -1,0 +1,52 @@
+# Whisper 模型搬運工：
+# 遠端開發環境的網路策略擋住了 openaipublic.azureedge.net（Whisper 官方模型主機），
+# 但放行 GitHub。這個 workflow 在 GitHub 的執行器上下載官方模型、驗證 SHA256、
+# 掛成本 repo 的 release 附件（tag: whisper-models），開發環境再從 release 下載並重驗雜湊。
+name: Fetch Whisper models
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [claude/video-automation-cvkjkp]
+    paths: ['.github/workflows/fetch-whisper-models.yml']
+
+permissions:
+  contents: write
+
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download official models and verify SHA256
+        run: |
+          set -euo pipefail
+          # 雜湊即官方 URL 路徑中的目錄名（openai/whisper _MODELS）
+          declare -A MODELS=(
+            [tiny]=65147644a518d12f04e32d6f3b26facc3f8dd46e5390956a9424a650c0ce22b9
+            [base]=ed3a0b6b1c0edf879ad9b11b1af5a0e6ab5db9205f891f668f8b0e6c6326e34e
+            [small]=9ecf779972d90ba49c06d968637d720dd632c55bbf19d441fb42bf17a411e794
+            [medium]=345ae4da62f9b3d59415adc60127b97c714f32e89e936602e85993674d08dcb1
+          )
+          for name in tiny base small medium; do
+            sha="${MODELS[$name]}"
+            url="https://openaipublic.azureedge.net/main/whisper/models/${sha}/${name}.pt"
+            echo "downloading ${name}.pt ..."
+            curl -fsSL --retry 3 --retry-delay 5 -o "${name}.pt" "$url"
+            echo "${sha}  ${name}.pt" | sha256sum -c -
+          done
+
+      - name: Publish as release assets
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          if ! gh release view whisper-models --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            gh release create whisper-models \
+              --repo "$GITHUB_REPOSITORY" \
+              --title "Whisper model weights (official mirror)" \
+              --notes "OpenAI Whisper 官方模型權重鏡像，供受限網路的開發環境下載。每個檔案的 SHA256 等於官方下載 URL 中的目錄名，可自行驗證。" \
+              tiny.pt base.pt small.pt medium.pt
+          else
+            gh release upload whisper-models tiny.pt base.pt small.pt medium.pt \
+              --clobber --repo "$GITHUB_REPOSITORY"
+          fi

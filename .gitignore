@@ -1,0 +1,2 @@
+# Claude Code 本地 MCP 設定（指向本機 capcut-mcp 伺服器，非網站內容，不進版本控制）
+.mcp.json
